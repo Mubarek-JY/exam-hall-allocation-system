@@ -6,7 +6,7 @@
 
 ## Team Members
 1. Meba Abebe  
-2. Moti Umeta  
+2. Moti Umeta - ETS 1054/17  
 3. Mesoud Foto  
 4. Melaku Yospeh  
 5. Mubarek Jemal  
