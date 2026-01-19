@@ -5,18 +5,16 @@
 #include <string>
 #include <vector>
 
-
 using namespace std;
 
-// Configurations
 string TEACHER_PIN = "654321"; // Teacher PIN (changeable)
 int numHalls = 5;
 int seatsPerHall = 10;
 
-// Added: Fixed-size array for login logs
+// Fixed-size array for login logs
 const int MAX_LOGS = 100;
-string loginLogs[MAX_LOGS]; // Array to store login attempts
-int logCount = 0;           // Counter for login attempts
+string loginLogs[MAX_LOGS];
+int logCount = 0;
 
 // Structure to store student information
 struct Student {
@@ -41,15 +39,32 @@ bool isSixDigitNumber(const string &s) {
   return true;
 }
 
-// Get a valid student ID in format "etsXXXXXX"
+// Convert string to lowercase
+string toLowerCase(const string &s) {
+  string result = s;
+  for (char &c : result) {
+    c = tolower(c);
+  }
+  return result;
+}
+
+// Get a valid student ID in format "etsXXXXXX" or "ETSXXXXXX"
 string getValidETSID() {
   string id;
   while (true) {
-    cout << "\nEnter Student ID (ets + 6 digits): ";
+    cout << "\nEnter Student ID (ets/ETS + 6 digits): ";
     cin >> id;
 
-    if (id.length() != 9 || id.substr(0, 3) != "ets") {
-      cout << "Invalid format! Must start with lowercase 'ets'\n";
+    if (id.length() != 9) {
+      cout << "Invalid format! Must be 9 characters (ets/ETS + 6 digits)\n";
+      continue;
+    }
+
+    // Convert first 3 chars to lowercase for comparison
+    string prefix = toLowerCase(id.substr(0, 3));
+
+    if (prefix != "ets") {
+      cout << "Invalid format! Must start with 'ets' or 'ETS'\n";
       continue;
     }
 
@@ -63,6 +78,8 @@ string getValidETSID() {
       continue;
     }
 
+    // Store ID in lowercase for consistency
+    id = "ets" + id.substr(3);
     return id;
   }
 }
@@ -96,15 +113,23 @@ string getFullName() {
   return name;
 }
 
-// Get department and validate
+// Get department and validate (case insensitive)
 string getDepartment() {
   string dept;
   cout << "\nDepartment (SE / EE / CV): ";
   cin >> dept;
 
+  // Convert to uppercase for consistency
+  for (char &c : dept) {
+    c = toupper(c);
+  }
+
   while (dept != "SE" && dept != "EE" && dept != "CV") {
     cout << "Invalid department. Enter again: ";
     cin >> dept;
+    for (char &c : dept) {
+      c = toupper(c);
+    }
   }
   return dept;
 }
@@ -136,7 +161,7 @@ bool teacherLogin() {
   return false;
 }
 
-// Student login by ID with 3 attempts
+// Student login by ID with 3 attempts (case insensitive)
 int studentLogin() {
   string id;
   int attempts = 3;
@@ -144,8 +169,11 @@ int studentLogin() {
   while (attempts--) {
     id = getValidETSID();
 
+    // Convert input to lowercase for comparison
+    string searchID = toLowerCase(id);
+
     for (size_t i = 0; i < students.size(); i++) {
-      if (students[i].id == id) {
+      if (toLowerCase(students[i].id) == searchID) {
         cout << "\nStudent login successful\n\n";
         return i;
       }
@@ -163,8 +191,10 @@ void registerStudent() {
   Student s;
   s.id = getValidETSID();
 
+  // Check if ID already exists (case insensitive)
+  string newIDLower = toLowerCase(s.id);
   for (auto &stu : students) {
-    if (stu.id == s.id) {
+    if (toLowerCase(stu.id) == newIDLower) {
       cout << "\nError: Student with this ID already exists!\n\n";
       return;
     }
@@ -185,8 +215,9 @@ void updateStudent() {
   cout << "\nEnter ID of student to update: ";
   id = getValidETSID();
 
+  string searchID = toLowerCase(id);
   for (auto &s : students) {
-    if (s.id == id) {
+    if (toLowerCase(s.id) == searchID) {
       cout << "Updating student: " << s.name << "\n";
       s.name = getFullName();
       s.department = getDepartment();
@@ -203,8 +234,9 @@ void deleteStudent() {
   cout << "\nEnter ID of student to delete: ";
   id = getValidETSID();
 
+  string searchID = toLowerCase(id);
   for (size_t i = 0; i < students.size(); i++) {
-    if (students[i].id == id) {
+    if (toLowerCase(students[i].id) == searchID) {
       students.erase(students.begin() + i);
       cout << "\nStudent deleted successfully\n\n";
       return;
@@ -227,9 +259,10 @@ void searchStudent() {
 
   Student *ptr = students.data(); // Get pointer to first element
   size_t size = students.size();
+  string searchID = toLowerCase(id);
 
   for (size_t i = 0; i < size; i++) {
-    if ((ptr + i)->id == id) { // Pointer arithmetic
+    if (toLowerCase((ptr + i)->id) == searchID) { // Pointer arithmetic
       cout << "Found using pointer!\n";
       cout << "Name: " << (ptr + i)->name
            << ", Department: " << (ptr + i)->department;
@@ -270,14 +303,14 @@ void allocateDepartmentWise() {
   cout << "\nDepartment-wise allocation done\n\n";
 }
 
-// Allocate seats randomly using dynamic memory allocation
+// Allocate seats randomly
 void allocateRandom() {
   if (students.empty())
     return;
 
   srand(time(0));
 
-  // Using dynamic 2D array with pointers
+  // Using dynamic 2D array
   bool **taken = new bool *[numHalls + 1];
   for (int i = 0; i <= numHalls; i++) {
     taken[i] = new bool[seatsPerHall + 1];
@@ -317,7 +350,7 @@ void allocateRandom() {
   cout << "\nRandom allocation done with no conflicts!\n\n";
 }
 
-// Reset system (delete all students)
+// delete all students
 void resetSystem() {
   students.clear();
   cout << "\nSystem reset complete. All students removed.\n\n";
@@ -340,7 +373,7 @@ void viewAllStudents() {
   cout << "\n";
 }
 
-// View login attempts log (uses array)
+// View login attempts log
 void viewLoginLogs() {
   cout << "\n=== Login Attempts Log ===\n";
   if (logCount == 0) {
@@ -411,7 +444,7 @@ void teacherMenu() {
   }
 }
 
-// Student dashboard interface
+// Students dashboard interface
 void studentMenu(int index) {
   auto &s = students[index];
   cout << "Student Dashboard:\n";
@@ -432,7 +465,7 @@ int main() {
   while (true) {
     cout << "Exam Hall Seat Allocation System\n";
     cout << "1. Teacher Login (PIN only)\n";
-    cout << "2. Student Login (ID etsXXXXXX)\n";
+    cout << "2. Student Login (ID etsXXXXXX or ETSXXXXXX)\n";
     cout << "3. Exit\n";
     cout << "Choice: ";
     cin >> choice;
