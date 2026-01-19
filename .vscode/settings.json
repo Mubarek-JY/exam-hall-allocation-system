@@ -1,5 +1,0 @@
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "xaver.clang-format",
-  "clang-format.executable": "C:/Program Files/LLVM/bin/clang-format.exe"
-}
