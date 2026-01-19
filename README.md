@@ -8,7 +8,7 @@
 1. Meba Abebe
 2. Moti Umeta - ETS 1054/17  
 3. Mesoud Foto - Ets 0992/17
-4. Melaku Yospeh
+4. Melaku Yospeh - Ets 0973/17
 5. Mubarek Jemal
 
 ## Project Description
