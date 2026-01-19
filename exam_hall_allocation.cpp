@@ -1,5 +1,3 @@
-#include <algorithm> // Needed for transform
-#include <cctype>    // Needed for tolower
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -7,12 +5,18 @@
 #include <string>
 #include <vector>
 
+
 using namespace std;
 
 // Configurations
 string TEACHER_PIN = "654321"; // Teacher PIN (changeable)
 int numHalls = 5;
 int seatsPerHall = 10;
+
+// Added: Fixed-size array for login logs
+const int MAX_LOGS = 100;
+string loginLogs[MAX_LOGS]; // Array to store login attempts
+int logCount = 0;           // Counter for login attempts
 
 // Structure to store student information
 struct Student {
@@ -44,16 +48,8 @@ string getValidETSID() {
     cout << "\nEnter Student ID (ets + 6 digits): ";
     cin >> id;
 
-    // 1. Get the first 3 characters
-    string prefix = id.substr(0, 3);
-
-    // 2. Convert that prefix to lowercase
-    transform(prefix.begin(), prefix.end(), prefix.begin(), ::tolower);
-
-    // 3. Perform the check
-    if (id.length() != 9 || prefix != "ets") {
-      cout << "Invalid format! ID must be 9 characters long and start with "
-              "'ets'\n";
+    if (id.length() != 9 || id.substr(0, 3) != "ets") {
+      cout << "Invalid format! Must start with lowercase 'ets'\n";
       continue;
     }
 
@@ -122,6 +118,11 @@ bool teacherLogin() {
 
   while (attempts--) {
     pin = getSixDigitPIN();
+
+    // Added: Log login attempt in array
+    if (logCount < MAX_LOGS) {
+      loginLogs[logCount++] = "Teacher login attempt: " + pin;
+    }
 
     if (pin == TEACHER_PIN) {
       cout << "\nTeacher login successful\n\n";
@@ -212,17 +213,28 @@ void deleteStudent() {
   cout << "\nStudent not found\n\n";
 }
 
-// Search for a student by ID
+// Search for a student by ID using pointer arithmetic
 void searchStudent() {
   string id;
   cout << "\nEnter ID of student to search: ";
   id = getValidETSID();
 
-  for (auto &s : students) {
-    if (s.id == id) {
-      cout << "Name: " << s.name << ", Department: " << s.department;
-      if (s.hall != -1)
-        cout << ", Hall: " << s.hall << ", Seat: " << s.seat;
+  // Using pointer to iterate through vector
+  if (students.empty()) {
+    cout << "\nNo students registered.\n\n";
+    return;
+  }
+
+  Student *ptr = students.data(); // Get pointer to first element
+  size_t size = students.size();
+
+  for (size_t i = 0; i < size; i++) {
+    if ((ptr + i)->id == id) { // Pointer arithmetic
+      cout << "Found using pointer!\n";
+      cout << "Name: " << (ptr + i)->name
+           << ", Department: " << (ptr + i)->department;
+      if ((ptr + i)->hall != -1)
+        cout << ", Hall: " << (ptr + i)->hall << ", Seat: " << (ptr + i)->seat;
       cout << "\n\n";
       return;
     }
@@ -258,15 +270,21 @@ void allocateDepartmentWise() {
   cout << "\nDepartment-wise allocation done\n\n";
 }
 
-// Allocate seats randomly without conflicts
+// Allocate seats randomly using dynamic memory allocation
 void allocateRandom() {
   if (students.empty())
     return;
 
   srand(time(0));
 
-  vector<vector<bool>> taken(numHalls + 1,
-                             vector<bool>(seatsPerHall + 1, false));
+  // Using dynamic 2D array with pointers
+  bool **taken = new bool *[numHalls + 1];
+  for (int i = 0; i <= numHalls; i++) {
+    taken[i] = new bool[seatsPerHall + 1];
+    for (int j = 0; j <= seatsPerHall; j++) {
+      taken[i][j] = false;
+    }
+  }
 
   for (auto &s : students) {
     int h, se;
@@ -289,6 +307,13 @@ void allocateRandom() {
       taken[h][se] = true;
     }
   }
+
+  // Clean up dynamic memory
+  for (int i = 0; i <= numHalls; i++) {
+    delete[] taken[i];
+  }
+  delete[] taken;
+
   cout << "\nRandom allocation done with no conflicts!\n\n";
 }
 
@@ -315,6 +340,19 @@ void viewAllStudents() {
   cout << "\n";
 }
 
+// View login attempts log (uses array)
+void viewLoginLogs() {
+  cout << "\n=== Login Attempts Log ===\n";
+  if (logCount == 0) {
+    cout << "No login attempts recorded.\n";
+  } else {
+    for (int i = 0; i < logCount; i++) {
+      cout << i + 1 << ". " << loginLogs[i] << endl;
+    }
+  }
+  cout << "==========================\n\n";
+}
+
 // Teacher menu interface
 void teacherMenu() {
   int ch;
@@ -329,7 +367,8 @@ void teacherMenu() {
     cout << "7. Random Allocation\n";
     cout << "8. View All Students\n";
     cout << "9. Reset System\n";
-    cout << "10. Logout\n";
+    cout << "10. View Login Logs\n";
+    cout << "11. Logout\n";
     cout << "Choice: ";
     cin >> ch;
 
@@ -362,6 +401,9 @@ void teacherMenu() {
       resetSystem();
       break;
     case 10:
+      viewLoginLogs();
+      break;
+    case 11:
       return;
     default:
       cout << "\nInvalid choice\n\n";
