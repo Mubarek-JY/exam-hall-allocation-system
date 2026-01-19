@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-
 using namespace std;
 
 // Configurations
@@ -156,7 +155,7 @@ int studentLogin() {
   return -1;
 }
 
-// ======== Teacher Functionalities ========
+// ===== Teacher Functionalities =====
 
 // Register a new student
 void registerStudent() {
@@ -277,7 +276,6 @@ void allocateRandom() {
 
   srand(time(0));
 
-  // Using dynamic 2D array with pointers
   bool **taken = new bool *[numHalls + 1];
   for (int i = 0; i <= numHalls; i++) {
     taken[i] = new bool[seatsPerHall + 1];
